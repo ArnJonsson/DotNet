@@ -121,12 +121,12 @@ namespace MsgSocket
 
             // while true loop
             var input = "";
-            do
+            while(true)
             {
                 input = Console.ReadLine();
+                if (input == "exit") break;
                 cntrl.Process(input);
             }
-            while (input != "exit");
 
         }
 

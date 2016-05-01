@@ -88,6 +88,7 @@ namespace MsgSocket
                 Console.WriteLine("".PadLeft(4) + "Attempting to start TcpSocketServer...");
                 
                 listener = new Thread(() => StartListening(address, port, bufferSize));
+                listener.IsBackground = true;
                 listener.Start();
                 
 
