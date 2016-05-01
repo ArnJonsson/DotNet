@@ -90,14 +90,14 @@ namespace MsgSocket
                 listener = new Thread(() => StartListening(address, port, bufferSize));
                 listener.IsBackground = true;
                 listener.Start();
-                
+
 
                 // the resource reclaiming thread fires every 3 seconds
                 /*
                 reclaimer = new System.Timers.Timer(3000);
                 reclaimer.Elapsed += Reclaim;
                 */
-
+                isRunning = true;
             }
         }
 
@@ -119,6 +119,7 @@ namespace MsgSocket
                     listener = null;
                 }
 
+                isRunning = false;
                 Console.WriteLine("".PadLeft(4) + "Server terminated");
             }
         }
@@ -194,7 +195,7 @@ namespace MsgSocket
             Socket handler = session.workingSocket;
 
             int read = handler.EndReceive(ar);
-
+            /*
             // check received data
             if(!session.isAuthenticated && session.receivedData.Count() > 5)
             {
@@ -216,30 +217,33 @@ namespace MsgSocket
                 }
        
             }
+            */
 
 
             if(read > 0)
             {
-                // store data received so far
-                foreach (byte bit in session.buffer)
+                foreach(byte bit in session.buffer)
                 {
                     session.receivedData.Add(bit);
                 }
 
-                string endFlag = session.receivedData.ToString();
 
-                if(endFlag.IndexOf("</root>") > -1 || endFlag.IndexOf("<root />") > -1)
+
+                string datacontent = Encoding.UTF8.GetString(session.receivedData.ToArray());
+
+                Console.WriteLine(datacontent);
+
+                if(datacontent.IndexOf("</root>") > -1 || datacontent.IndexOf("root />") > -1)
                 {
+                    Console.WriteLine("DataContent recieved");
+                    Console.WriteLine(datacontent);
+
                     SendCallback(handler, callBackFlag);
                 }
-
-
-
-
-            }
-            else
-            {
-                handler.BeginReceive(session.buffer, 0, session.bufferSize, 0, new AsyncCallback(CheckReceived), session);
+                else
+                {
+                    handler.BeginReceive(session.buffer, 0, session.bufferSize, 0, new AsyncCallback(CheckReceived), session);
+                }
             }
         }
 

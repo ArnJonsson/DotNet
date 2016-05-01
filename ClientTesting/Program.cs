@@ -139,7 +139,7 @@ namespace ClientTesting
                 {
                     if(session.receivedData.Count() > 0)
                     {
-                        Console.WriteLine(session.receivedData.ToString());
+                        Console.WriteLine(Encoding.UTF8.GetString(session.receivedData.ToArray()));
                     }
 
                     receive.Set();
