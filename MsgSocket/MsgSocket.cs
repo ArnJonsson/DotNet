@@ -21,6 +21,8 @@ namespace MsgSocket
         private Socket listener;
         private Thread reclaimer;
 
+        ManualResetEvent eventHandler = new ManualResetEvent(false);
+
         /// <summary>
         /// 
         /// </summary>

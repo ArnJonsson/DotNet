@@ -7,9 +7,13 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Xml.Linq;
 using System.Text.RegularExpressions;
+using System.Net.Sockets;
 
 namespace Util
 {
+    /// <summary>
+    /// TODO: create a private real c# class library
+    /// </summary>
     public class Util
     {
     }
@@ -160,6 +164,26 @@ namespace Util
         {
             MemoryStream ms = new MemoryStream(array);
             return new Msg(XDocument.Load(ms));
+        }
+    }
+
+    /// <summary>
+    /// State object for socket server connections
+    /// </summary>
+    public class Session
+    {
+        public Socket workingSocket = null;
+
+        public int bufferSize;
+
+        public byte[] buffer;
+
+        public List<byte> receivedData = new List<byte>();
+
+        public Session(int bufferSize = 1024)
+        {
+            this.bufferSize = bufferSize;
+            buffer = new byte[bufferSize];
         }
     }
 
