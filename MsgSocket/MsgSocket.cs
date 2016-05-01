@@ -27,7 +27,7 @@ namespace MsgSocket
 
         // list of active session -- read up on better methods, this looks as wrong as it feels
         // pushing problem at the end of todos
-        private List<Session> sessions = new List<Session>();
+        private static List<Session> sessions = new List<Session>();
 
         // async signaling
         public static ManualResetEvent eventHandler = new ManualResetEvent(false);
@@ -94,10 +94,10 @@ namespace MsgSocket
 
 
                 // the resource reclaiming thread fires every 3 seconds
-                /*
+                
                 reclaimer = new System.Timers.Timer(3000);
                 reclaimer.Elapsed += Reclaim;
-                */
+                reclaimer.Enabled = true;
                 isRunning = true;
             }
         }
@@ -179,6 +179,11 @@ namespace MsgSocket
 
             Session session = new Session(sessionSize);
             session.workingSocket = handler;
+
+            lock(sessions)
+            {
+                sessions.Add(session);
+            }
 
             Print((string.Format("ClientSession created with Guid {0}", session.gId.ToString())));
 
@@ -296,9 +301,22 @@ namespace MsgSocket
         /// 
         /// </summary>
         /// <param name="ar"></param>
-        public void Reclaim(object source, ElapsedEventArgs e)
+        public static void Reclaim(object source, ElapsedEventArgs e)
         {
-            
+            lock(sessions)
+            {
+                //Print("Trying to reclaim resources");
+                foreach(Session session in sessions)
+                {
+                    if(session.terminate)
+                    {
+                        Print(string.Format("Session {0} terminated", session.gId.ToString()));
+                        session.workingSocket = null;
+                        session.receivedData = null;
+                        sessions.Remove(session);
+                    }
+                }
+            }
         }
 
         public static void Print(string message = "")
