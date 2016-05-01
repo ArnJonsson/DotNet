@@ -116,8 +116,10 @@ namespace MsgSocket
                 return;
             }
 
+            string[] startTokens = { "<root>", "<root />" };
+            string[] stopTokens = { "</root>", "<root />" };
             //
-            Controller cntrl = new Controller(new MsgSocket(Dns.Resolve(Dns.GetHostName()).AddressList[0], 11000, 1024));
+            Controller cntrl = new Controller(new MsgSocket(Dns.Resolve(Dns.GetHostName()).AddressList[0], 11000, 1024, new RecieveTokens(startTokens, stopTokens)));
 
             // while true loop
             var input = "";

@@ -39,6 +39,9 @@ namespace MsgSocket
         private int bufferSize;
         public static int sessionSize;
 
+        private static string[] startTokens;
+        private static string[] stopTokens;
+
         const string serverTag = "%Server";
         const string callBackFlag = "The message was transfered successfully";
 
@@ -48,12 +51,15 @@ namespace MsgSocket
         /// <param name="address"></param> 
         /// <param name="port"></param>
         /// <param name="bufferSize"></param>
-        public MsgSocket(IPAddress address, int port, int bufferSize)
+        public MsgSocket(IPAddress address, int port, int bufferSize, RecieveTokens tokens)
         {
             this.address = address;
             this.port = port;
             this.bufferSize = bufferSize;
             sessionSize = bufferSize;
+
+            startTokens = (string[])tokens.startTokens;
+            stopTokens = (string[])tokens.stopTokens;
         }
 
         /// <summary>
@@ -203,32 +209,6 @@ namespace MsgSocket
             Socket handler = session.workingSocket;
 
             int read = handler.EndReceive(ar);
-            
-
-            /*
-            // check received data
-            if(!session.isAuthenticated && session.receivedData.Count() > 5)
-            {
-                Print("Authentication");
-                List<byte> auList = session.receivedData.GetRange(0, 5);
-
-                if(auList.ToString() == "<root")
-                {
-                    session.isAuthenticated = true;
-                    Print(string.Format("Session {0} authenticated", session.gId.ToString()));
-                }
-                else
-                {
-                    Print(string.Format("Failed to authenticate session {0}, marking for termination", session.gId.ToString()));
-                    BadRecieve(handler, "Socket shutdown");
-                    session.terminate = true;
-                    // look into premature cancellation
-                    return;
-                }
-       
-            }
-            */
-
 
             if(read > 0)
             { 
@@ -239,7 +219,7 @@ namespace MsgSocket
                 }
 
                 // End strings
-                if(session.Contains("</root>", "<root />"))
+                if(session.Contains(stopTokens))
                 {
                     Print((string.Format("ClientSession {0} data received", session.gId.ToString())));
 
@@ -253,7 +233,7 @@ namespace MsgSocket
                     }
                     else
                     {
-                        if(session.Contains("<root>", "<root />"))
+                        if(session.Contains(startTokens))
                         {
                             Print(string.Format("session {0} successfully authenticated", session.gId.ToString()));
                             session.isAuthenticated = true;

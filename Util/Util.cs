@@ -193,7 +193,7 @@ namespace Util
             gId = Guid.NewGuid();
         }
 
-        public bool Contains(params string[] str)
+        public bool Contains(string[] str)
         {
             string dataSoFar = Encoding.UTF8.GetString(receivedData.ToArray());
             foreach(string s in str)
@@ -201,6 +201,18 @@ namespace Util
                 if (dataSoFar.Contains(s)) return true;
             }
             return false;
+        }
+    }
+
+    public class RecieveTokens
+    {
+        public object[] startTokens;
+        public object[] stopTokens;
+
+        public RecieveTokens(object[] startTokens, object[] stopTokens)
+        {
+            this.startTokens = startTokens;
+            this.stopTokens = stopTokens;
         }
     }
 
