@@ -341,7 +341,8 @@ namespace MsgSocket
         /// 
         /// Periodically scan active clients - removing those signaled for termination
         /// </summary>
-        /// <param name="ar"></param>
+        /// <param name="source"></param>
+        /// <param name="e"></param>
         public static void Reclaim(object source, ElapsedEventArgs e)
         {
             lock(sessions)
