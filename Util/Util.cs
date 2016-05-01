@@ -172,6 +172,8 @@ namespace Util
     /// </summary>
     public class Session
     {
+        public Guid gId;
+
         public bool terminate = false;
 
         public bool isAuthenticated = false;
@@ -188,6 +190,7 @@ namespace Util
         {
             this.bufferSize = bufferSize;
             buffer = new byte[bufferSize];
+            gId = Guid.NewGuid();
         }
     }
 
