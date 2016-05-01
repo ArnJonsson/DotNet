@@ -164,15 +164,42 @@ namespace ClientTesting
             Console.WriteLine("Press enter to fire a client");
             Console.ReadLine();
 
-            Msg message = new Msg();
-            message.AddElement(new XElement("Data", new string('.', 500000)));
+            int c = 0;
+            while(c < 1500)
+            {
 
-            Client client = new Client(null, Dns.Resolve(Dns.GetHostName()).AddressList[0], 11000, 1024);
-            client.StartClient();
+                Random r = new Random();
+                int random = r.Next(0, 10);
+
+                if(random <5)
+                {
+                    Thread deadThread = new Thread(new ThreadStart(StartDeadClient));
+                    deadThread.Start();
+                }
+                else
+                {
+                    Thread goodThread = new Thread(new ThreadStart(StartGoodClient));
+                    goodThread.Start();
+                }
+
+                c++;
+            }
 
             Console.WriteLine("Press enter to exit");
 
             Console.ReadLine();
+        }
+
+        static void StartDeadClient()
+        {
+            Client deadClient = new Client(null, Dns.Resolve(Dns.GetHostName()).AddressList[0], 11000, 1024);
+            deadClient.StartClient();
+        }
+
+        static void StartGoodClient()
+        {
+            Client client = new Client(new Msg(), Dns.Resolve(Dns.GetHostName()).AddressList[0], 11000, 1024);
+            client.StartClient();
         }
     }
 }
