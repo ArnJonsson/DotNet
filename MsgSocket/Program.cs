@@ -98,6 +98,7 @@ namespace MsgSocket
         private void Print(string message = "")
         {
             Console.WriteLine("console>: " + message);
+            Console.WriteLine("gittest");
         }
     }
 
@@ -106,7 +107,7 @@ namespace MsgSocket
         static void Main(string[] args)
         {
             //
-            Controller cntrl = new Controller(new MessageSocket());
+            Controller cntrl = new Controller(new MsgSocket(null, 0));
 
             // while true loop
             var input = "";
