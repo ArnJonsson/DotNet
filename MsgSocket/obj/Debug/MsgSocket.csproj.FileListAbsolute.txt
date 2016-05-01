@@ -1,1 +1,8 @@
 c:\users\arnar\documents\visual studio 2015\Projects\MsgSocket\MsgSocket\bin\Debug\MsgSocket.exe.config
+C:\Users\arnar\Documents\Visual Studio 2015\Projects\MsgSocket\MsgSocket\bin\Debug\MsgSocket.exe
+C:\Users\arnar\Documents\Visual Studio 2015\Projects\MsgSocket\MsgSocket\bin\Debug\MsgSocket.pdb
+C:\Users\arnar\Documents\Visual Studio 2015\Projects\MsgSocket\MsgSocket\bin\Debug\Util.dll
+C:\Users\arnar\Documents\Visual Studio 2015\Projects\MsgSocket\MsgSocket\bin\Debug\Util.pdb
+C:\Users\arnar\Documents\Visual Studio 2015\Projects\MsgSocket\MsgSocket\obj\Debug\MsgSocket.csprojResolveAssemblyReference.cache
+C:\Users\arnar\Documents\Visual Studio 2015\Projects\MsgSocket\MsgSocket\obj\Debug\MsgSocket.exe
+C:\Users\arnar\Documents\Visual Studio 2015\Projects\MsgSocket\MsgSocket\obj\Debug\MsgSocket.pdb

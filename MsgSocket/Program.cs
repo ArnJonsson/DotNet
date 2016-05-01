@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 using Util;
 using System.Reflection;
-
+using System.Xml.Linq;
 namespace MsgSocket
 {
 
@@ -106,6 +106,13 @@ namespace MsgSocket
     {
         static void Main(string[] args)
         {
+            bool debug = true;
+            if(debug)
+            {
+                Debug();
+                return;
+            }
+
             //
             Controller cntrl = new Controller(new MsgSocket(null, 0));
 
@@ -118,6 +125,41 @@ namespace MsgSocket
             }
             while (input != "exit");
 
+        }
+
+        static void Debug()
+        {
+            tPrint("Begin testing");
+
+            tPrint("Msg empty constructor");
+
+            Msg msg = new Msg();
+            tPrint("TEST : Expenting a single root element");
+            tPrint(msg.AsString());
+
+            msg.AddElement(new XElement("child", "some data"));
+            tPrint("TEST : Expecting a single child element in root with some data");
+            tPrint(msg.AsString());
+
+            XDocument doc = new XDocument();
+            XElement ele1 = new XElement("dataOne", "somedata1");
+            XElement ele2 = new XElement("dataTwo", "somedata2");
+            XElement ele3 = new XElement("dataThree", "somedata3");
+            doc.Add(ele1);
+            ele1.Add(ele2);
+            ele2.Add(ele3);
+
+            Msg msgTwo = new Msg(doc);
+            tPrint("TEST : Expecting a msg with 3 data elements and some data");
+            tPrint(msgTwo.AsString());
+
+            // preventing app shutdown
+            Console.ReadLine();
+        }
+
+        static void tPrint(string message = "")
+        {
+            Console.WriteLine(message);
         }
     }
 }
