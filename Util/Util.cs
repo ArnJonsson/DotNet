@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using System.Text.RegularExpressions;
+
 namespace Util
 {
     public class Util
@@ -62,6 +64,49 @@ namespace Util
                     arguments.Add(argument);
                 }
             }
+        }
+    }
+
+    /// <summary>
+    /// Base class for message-exchange between client and server socket
+    /// </summary>
+    public class Msg
+    {
+        public bool isLegal { get; set; }
+        public Exception exeption { get; set; }
+
+        public Msg()
+        {
+            isLegal = true;
+            exeption = new Exception();
+        }
+    }
+
+    public class TransferMsg : Msg
+    {
+        public List<byte> data = new List<byte>();
+
+        public static byte[] ToByteArray(TransferMsg msg)
+        {
+            if(msg.data != null)
+            {
+                return msg.data.ToArray();
+            }
+            return null;
+            
+        }
+
+        public static TransferMsg FromByteArray(byte[] array)
+        {
+            if(array != null)
+            {
+                var list = new List<byte>(array);
+                TransferMsg msg = new TransferMsg();
+                msg.data = list;
+                return msg;
+            }
+
+            return null;
         }
     }
 }

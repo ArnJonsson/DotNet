@@ -19,11 +19,11 @@ namespace MsgSocket
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="address"></param>
+        /// <param name="address"></param> 
         /// <param name="port"></param>
         public MsgSocket(IPAddress address, int port)
         {
-
+            Console.WriteLine("uselessness");
         }
 
         /// <summary>
@@ -32,6 +32,7 @@ namespace MsgSocket
         /// <param name="command"></param>
         public override void Invoke(Command command)
         {
+            Console.WriteLine("damn this is nice");
 
         }
     }
