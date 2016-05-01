@@ -27,11 +27,13 @@ namespace ClientTesting
 
         public Client(Msg message, IPAddress address, int port, int bufferSize)
         {
+
             this.message = message;
             this.address = address;
             this.port = port;
             this.bufferSize = bufferSize;
             sessionSize = bufferSize;
+
         }
 
         public void StartClient()
@@ -81,7 +83,10 @@ namespace ClientTesting
 
         public static void SendData(Socket client, Msg message)
         {
-            byte[] data = message.ToByteArray();
+            byte[] data;
+            string randomData = "not so random data";
+            if (message == null) data = Encoding.UTF8.GetBytes(randomData);
+            else data = message.ToByteArray();
 
             client.BeginSend(data, 0, data.Length, 0, new AsyncCallback(SendData), client);
         }
@@ -159,7 +164,10 @@ namespace ClientTesting
             Console.WriteLine("Press enter to fire a client");
             Console.ReadLine();
 
-            Client client = new Client(new Msg(), Dns.Resolve(Dns.GetHostName()).AddressList[0], 11000, 1024);
+            Msg message = new Msg();
+            message.AddElement(new XElement("Data", new string('.', 500000)));
+
+            Client client = new Client(null, Dns.Resolve(Dns.GetHostName()).AddressList[0], 11000, 1024);
             client.StartClient();
 
             Console.WriteLine("Press enter to exit");

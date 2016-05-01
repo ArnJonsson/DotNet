@@ -17,6 +17,8 @@ namespace MsgSocket
     /// </summary>
     public class MsgSocket : ConsoleApp
     {
+        private static string correctStart = "<root";
+
         private bool isRunning = false;
 
         // initial listener
@@ -201,21 +203,23 @@ namespace MsgSocket
             Socket handler = session.workingSocket;
 
             int read = handler.EndReceive(ar);
+            
+
             /*
             // check received data
             if(!session.isAuthenticated && session.receivedData.Count() > 5)
             {
-          
+                Print("Authentication");
                 List<byte> auList = session.receivedData.GetRange(0, 5);
 
                 if(auList.ToString() == "<root")
                 {
                     session.isAuthenticated = true;
-                    Console.WriteLine("".PadLeft(4) + "Session authenticated");
+                    Print(string.Format("Session {0} authenticated", session.gId.ToString()));
                 }
                 else
                 {
-                    Console.WriteLine("".PadLeft(4) + "Failed to authenticate session");
+                    Print(string.Format("Failed to authenticate session {0}, marking for termination", session.gId.ToString()));
                     BadRecieve(handler, "Socket shutdown");
                     session.terminate = true;
                     // look into premature cancellation
@@ -227,25 +231,40 @@ namespace MsgSocket
 
 
             if(read > 0)
-            {
+            { 
+
                 foreach(byte bit in session.buffer)
                 {
                     session.receivedData.Add(bit);
                 }
 
-
-
-                string datacontent = Encoding.UTF8.GetString(session.receivedData.ToArray());
-
-                if(datacontent.IndexOf("</root>") > -1 || datacontent.IndexOf("root />") > -1)
+                // End strings
+                if(session.Contains("</root>", "<root />"))
                 {
-                    Print((string.Format("ClientSession {0} data received, data : {1}", session.gId.ToString(), datacontent)));
+                    Print((string.Format("ClientSession {0} data received", session.gId.ToString())));
 
                     SendCallback(handler, callBackFlag, session.gId);
                 }
                 else
                 {
-                    handler.BeginReceive(session.buffer, 0, session.bufferSize, 0, new AsyncCallback(CheckReceived), session);
+                    if(session.isAuthenticated)
+                    {
+                        handler.BeginReceive(session.buffer, 0, session.bufferSize, 0, new AsyncCallback(CheckReceived), session);
+                    }
+                    else
+                    {
+                        if(session.Contains("<root>", "<root />"))
+                        {
+                            Print(string.Format("session {0} successfully authenticated", session.gId.ToString()));
+                            session.isAuthenticated = true;
+                            handler.BeginReceive(session.buffer, 0, session.bufferSize, 0, new AsyncCallback(CheckReceived), session);
+                        }
+                        else
+                        {
+                            Print(string.Format("authentication for session {0} failed, marking for termination", session.gId.ToString()));
+                            session.terminate = true;
+                        }
+                    }
                 }
             }
         }
@@ -306,7 +325,7 @@ namespace MsgSocket
             lock(sessions)
             {
                 //Print("Trying to reclaim resources");
-                foreach(Session session in sessions)
+                foreach(Session session in sessions.ToList())
                 {
                     if(session.terminate)
                     {
