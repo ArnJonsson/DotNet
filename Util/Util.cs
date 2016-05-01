@@ -192,6 +192,16 @@ namespace Util
             buffer = new byte[bufferSize];
             gId = Guid.NewGuid();
         }
+
+        public bool Contains(params string[] str)
+        {
+            string dataSoFar = Encoding.UTF8.GetString(receivedData.ToArray());
+            foreach(string s in str)
+            {
+                if (dataSoFar.Contains(s)) return true;
+            }
+            return false;
+        }
     }
 
     
