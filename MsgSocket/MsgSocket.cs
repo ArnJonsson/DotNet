@@ -17,8 +17,7 @@ namespace MsgSocket
     /// </summary>
     public class MsgSocket : ConsoleApp
     {
-        private static string correctStart = "<root";
-
+        // isrunning
         private bool isRunning = false;
 
         // initial listener
@@ -34,23 +33,30 @@ namespace MsgSocket
         // async signaling
         public static ManualResetEvent eventHandler = new ManualResetEvent(false);
 
+
         private IPAddress address;
         private int port;
         private int bufferSize;
         public static int sessionSize;
 
+        // Data authentication?
         private static string[] startTokens;
         private static string[] stopTokens;
+
 
         const string serverTag = "%Server";
         const string callBackFlag = "The message was transfered successfully";
 
         /// <summary>
+        /// MsgSocket()
+        /// A skeleton for a low level Tcp socket server
         /// 
+        /// Server and client exchange Msg.class which houses an xml object 
         /// </summary>
-        /// <param name="address"></param> 
-        /// <param name="port"></param>
-        /// <param name="bufferSize"></param>
+        /// <param name="address">Target address</param> 
+        /// <param name="port">Target port</param>
+        /// <param name="bufferSize">Connection session buffersize</param>
+        /// <param name="tokens">Data authentication</param>
         public MsgSocket(IPAddress address, int port, int bufferSize, RecieveTokens tokens)
         {
             this.address = address;
@@ -63,9 +69,13 @@ namespace MsgSocket
         }
 
         /// <summary>
+        /// Invoke()
+        /// ConsoleApp.class override
         /// 
+        /// Intended use is for all communication with the "outside" world 
+        /// (read up on Reflections to get rid of hard coding)
         /// </summary>
-        /// <param name="command"></param>
+        /// <param name="command">Command command</param>
         public override void Invoke(Command command)
         {
             switch(command.command)
@@ -83,7 +93,9 @@ namespace MsgSocket
         }
 
         /// <summary>
+        /// Start()
         /// 
+        /// Starts the listening thread aswell as periodic resource reclaimer
         /// </summary>
         public void Start()
         {
@@ -121,8 +133,10 @@ namespace MsgSocket
             }
             else
             {
+                // Random number
                 listener.Join(5000);
 
+                // Opinions seem to differ on Thread.Abort() - read up on it
                 if(listener.IsAlive)
                 {
                     listener = null;
@@ -134,6 +148,8 @@ namespace MsgSocket
         }
 
         /// <summary>
+        /// StartListening(...)
+        /// 
         /// 
         /// </summary>
         /// <param name="address"></param>
@@ -174,6 +190,7 @@ namespace MsgSocket
         
 
         /// <summary>
+        /// BeginRecieve()
         /// 
         /// </summary>
         /// <param name="ar"></param>
@@ -199,6 +216,7 @@ namespace MsgSocket
         }
 
         /// <summary>
+        /// CheckRecieved
         /// 
         /// </summary>
         /// <param name="ar"></param>
@@ -208,7 +226,17 @@ namespace MsgSocket
             Session session = (Session)ar.AsyncState;
             Socket handler = session.workingSocket;
 
-            int read = handler.EndReceive(ar);
+            int read;
+            try {
+                read = handler.EndReceive(ar);
+            }
+            catch(Exception e)
+            {
+                // The connection was forcibly closed by the remote host?
+                // add to reading material
+                Print(e.Message);
+                return;
+            }
 
             if(read > 0)
             { 
@@ -233,6 +261,7 @@ namespace MsgSocket
                     }
                     else
                     {
+                        // """Start""" strings
                         if(session.Contains(startTokens))
                         {
                             Print(string.Format("session {0} successfully authenticated", session.gId.ToString()));
@@ -250,7 +279,9 @@ namespace MsgSocket
         }
 
         /// <summary>
+        /// BadRecieve()
         /// 
+        /// Gets called if data decryption fails (onTodo)
         /// </summary>
         /// <param name="ar"></param>
         public static void BadRecieve(Socket handler, string message)
@@ -258,13 +289,18 @@ namespace MsgSocket
             // TODO : this;
         }
 
+        /// <summary>
+        /// See above
+        /// </summary>
+        /// <param name="ar"></param>
         public static void BadReceive(IAsyncResult ar)
         {
             // and this;
         }
 
         /// <summary>
-        /// z
+        /// SendCallback
+        /// 
         /// </summary>
         /// <param name="ar"></param>
         public static void SendCallback(Socket handler, string message, Guid id)
@@ -276,6 +312,10 @@ namespace MsgSocket
             handler.BeginSend(response, 0, response.Length, 0, new AsyncCallback(SendCallback), handler);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ar"></param>
         public static void SendCallback(IAsyncResult ar)
         {
             try
@@ -297,7 +337,9 @@ namespace MsgSocket
         }
 
         /// <summary>
+        /// Reclaim (timer)
         /// 
+        /// Periodically scan active clients - removing those signaled for termination
         /// </summary>
         /// <param name="ar"></param>
         public static void Reclaim(object source, ElapsedEventArgs e)
@@ -318,6 +360,10 @@ namespace MsgSocket
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="message"></param>
         public static void Print(string message = "")
         {
             Console.WriteLine(serverTag + "".PadLeft(4) + message);

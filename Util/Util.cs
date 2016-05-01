@@ -20,6 +20,7 @@ namespace Util
 
     /// <summary>
     /// abstract class ConsoleApp
+    /// Parent of classes used by ApplicationControl (see Program.c in MsgSocket)
     /// </summary>
     abstract public class ConsoleApp
     {
@@ -28,7 +29,10 @@ namespace Util
     }
 
     /// <summary>
-    /// class Command
+    /// Command()
+    /// 
+    /// Class intended to be used as a command for ApplicationControl (see Program.c in MsgSocket)
+    /// Takes in a string read from console and splits it into a command and arguments
     /// </summary>
     public class Command
     {
@@ -74,7 +78,9 @@ namespace Util
     }
 
     /// <summary>
-    /// Message class - hold on to data from socket-to-socket communication
+    /// Msg()
+    /// 
+    /// A very (bad?) Xml object intended for socket-to-socket comminucation
     /// </summary>
     public class Msg
     {
@@ -87,7 +93,7 @@ namespace Util
 
         /// <summary>
         /// Msg(XDocument document)
-        /// Creates a new Msg xml object containing elements from document
+        /// Creates a new Msg xml object containing the elements from document
         /// </summary>
         /// <param name="document">XML file to be sent to/from socket</param>
         public Msg(XDocument document)
@@ -104,7 +110,7 @@ namespace Util
 
         /// <summary>
         /// Msg()
-        /// Creates a new empty XML object intended for data transfer from socket to socket
+        /// Creates a new XML document with one (root) element
         /// </summary>
         public Msg()
         {
@@ -145,12 +151,12 @@ namespace Util
         /// <summary>
         /// Converts the Msg to a byte array
         /// </summary>
-        /// <returns>String representation of the Msg xml document</returns>
+        /// <returns>byte[] representing the Msg class</returns>
         public byte[] ToByteArray()
         {
             MemoryStream ms = new MemoryStream();
             doc.Save(ms);
-            // resetting the streams position - read up on functionality
+            // resetting the streams position - read up on functionality (Position/Flush/general)
             ms.Position = 0;
             return ms.ToArray();
         }
@@ -169,13 +175,17 @@ namespace Util
 
     /// <summary>
     /// State object for socket server connections
+    /// Represents a client
     /// </summary>
     public class Session
     {
+        // global id
         public Guid gId;
 
+        // termination flag
         public bool terminate = false;
 
+        // authentication flag
         public bool isAuthenticated = false;
 
         public Socket workingSocket = null;
@@ -184,6 +194,7 @@ namespace Util
 
         public byte[] buffer;
 
+        // total bytes recieved
         public List<byte> receivedData = new List<byte>();
 
         public Session(int bufferSize = 1024)
@@ -193,6 +204,14 @@ namespace Util
             gId = Guid.NewGuid();
         }
 
+        /// <summary>
+        /// Contains(str)
+        /// Checks if sent data contains certain strings
+        /// Used for data authentication
+        /// Read up on authentication methods?
+        /// </summary>
+        /// <param name="str">String array</param>
+        /// <returns>True if Msg contains a string in str, false otherwise</returns>
         public bool Contains(string[] str)
         {
             string dataSoFar = Encoding.UTF8.GetString(receivedData.ToArray());
@@ -204,6 +223,11 @@ namespace Util
         }
     }
 
+    /// <summary>
+    /// RecieveTokens
+    /// 
+    /// Object tokens for data authentication
+    /// </summary>
     public class RecieveTokens
     {
         public object[] startTokens;
