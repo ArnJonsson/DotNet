@@ -8,6 +8,7 @@ using Util;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using System.Timers;
 
 namespace MsgSocket
 {
@@ -18,10 +19,25 @@ namespace MsgSocket
     {
         private bool isRunning = false;
 
-        private Socket listener;
-        private Thread reclaimer;
+        // initial listener
+        private Thread listener;
 
-        ManualResetEvent eventHandler = new ManualResetEvent(false);
+        // thread designated for session cleanup
+        private System.Timers.Timer reclaimer;
+
+        // list of active session -- read up on better methods, this looks as wrong as it feels
+        // pushing problem at the end of todos
+        private List<Session> sessions = new List<Session>();
+
+        // async signaling
+        public static ManualResetEvent eventHandler = new ManualResetEvent(false);
+
+        private IPAddress address;
+        private int port;
+        private int bufferSize;
+        public static int sessionSize;
+
+        const string callBackFlag = "The message was transfered successfully";
 
         /// <summary>
         /// 
@@ -31,7 +47,10 @@ namespace MsgSocket
         /// <param name="bufferSize"></param>
         public MsgSocket(IPAddress address, int port, int bufferSize)
         {
-            Console.WriteLine("uselessness");
+            this.address = address;
+            this.port = port;
+            this.bufferSize = bufferSize;
+            sessionSize = bufferSize;
         }
 
         /// <summary>
@@ -61,11 +80,23 @@ namespace MsgSocket
         {
             if(isRunning)
             {
+                Console.WriteLine("".PadLeft(4) + "Server is already running");
                 return;
             }
             else
             {
-                // start listening thread
+                Console.WriteLine("".PadLeft(4) + "Attempting to start TcpSocketServer...");
+                
+                listener = new Thread(() => StartListening(address, port, bufferSize));
+                listener.Start();
+                
+
+                // the resource reclaiming thread fires every 3 seconds
+                /*
+                reclaimer = new System.Timers.Timer(3000);
+                reclaimer.Elapsed += Reclaim;
+                */
+
             }
         }
 
@@ -76,13 +107,61 @@ namespace MsgSocket
         {
             if(!isRunning)
             {
-                return;
+                Console.WriteLine("".PadLeft(4) + "Server is not running");
             }
             else
             {
-                // cleanup
+                listener.Join(5000);
+
+                if(listener.IsAlive)
+                {
+                    listener = null;
+                }
+
+                Console.WriteLine("".PadLeft(4) + "Server terminated");
             }
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="address"></param>
+        /// <param name="port"></param>
+        /// <param name="bufferSize"></param>
+        public static void StartListening(IPAddress address, int port, int bufferSize)
+        {
+            IPEndPoint endpoint = new IPEndPoint(address, port);
+            byte[] dataBuffer = new byte[bufferSize];
+
+            Socket tcpListener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+
+            try
+            {
+                tcpListener.Bind(endpoint);
+                // 10 for testing purposes
+                tcpListener.Listen(10);
+
+                while(true)
+                {
+                    // nonsignal state
+                    eventHandler.Reset();
+
+                    Console.WriteLine("".PadLeft(4) + "MsgSocket started listening at port : " + port);
+
+                    tcpListener.BeginAccept(new AsyncCallback(BeginRecieve), tcpListener);
+
+                    // wait untill a message is received
+
+                    eventHandler.WaitOne();
+                }
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine("".PadLeft(4) + "Failed to start MsgSocket succefully");
+                Console.WriteLine("".PadLeft(4) + e.Message);
+            }
+        }
+        
 
         /// <summary>
         /// 
@@ -90,34 +169,131 @@ namespace MsgSocket
         /// <param name="ar"></param>
         public static void BeginRecieve(IAsyncResult ar)
         {
+            Console.WriteLine("".PadLeft(4) + "BeginReceive");
+            //set signal
+            eventHandler.Set();
 
+            Socket tcpListener = (Socket)ar.AsyncState;
+            Socket handler = tcpListener.EndAccept(ar);
+
+            Session session = new Session(sessionSize);
+            session.workingSocket = handler;
+            handler.BeginReceive(session.buffer, 0, session.bufferSize, 0, new AsyncCallback(CheckReceived), session); 
         }
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="ar"></param>
-        public static void BadRecieve(IAsyncResult ar)
+        public static void CheckReceived(IAsyncResult ar)
         {
+            Console.WriteLine("".PadLeft(4) + "Checkreceived");
 
+            Session session = (Session)ar.AsyncState;
+            Socket handler = session.workingSocket;
+
+            int read = handler.EndReceive(ar);
+
+            // check received data
+            if(!session.isAuthenticated && session.receivedData.Count() > 5)
+            {
+          
+                List<byte> auList = session.receivedData.GetRange(0, 5);
+
+                if(auList.ToString() == "<root")
+                {
+                    session.isAuthenticated = true;
+                    Console.WriteLine("".PadLeft(4) + "Session authenticated");
+                }
+                else
+                {
+                    Console.WriteLine("".PadLeft(4) + "Failed to authenticate session");
+                    BadRecieve(handler, "Socket shutdown");
+                    session.terminate = true;
+                    // look into premature cancellation
+                    return;
+                }
+       
+            }
+
+
+            if(read > 0)
+            {
+                // store data received so far
+                foreach (byte bit in session.buffer)
+                {
+                    session.receivedData.Add(bit);
+                }
+
+                string endFlag = session.receivedData.ToString();
+
+                if(endFlag.IndexOf("</root>") > -1 || endFlag.IndexOf("<root />") > -1)
+                {
+                    SendCallback(handler, callBackFlag);
+                }
+
+
+
+
+            }
+            else
+            {
+                handler.BeginReceive(session.buffer, 0, session.bufferSize, 0, new AsyncCallback(CheckReceived), session);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ar"></param>
+        public static void BadRecieve(Socket handler, string message)
+        {
+            // TODO : this;
+        }
+
+        public static void BadReceive(IAsyncResult ar)
+        {
+            // and this;
         }
 
         /// <summary>
         /// z
         /// </summary>
         /// <param name="ar"></param>
+        public static void SendCallback(Socket handler, string message)
+        {
+            Console.WriteLine("".PadLeft(4) + "SendCallback");
+            byte[] response = Encoding.UTF8.GetBytes(message);
+
+            handler.BeginSend(response, 0, response.Length, 0, new AsyncCallback(SendCallback), handler);
+        }
+
         public static void SendCallback(IAsyncResult ar)
         {
+            try
+            {
+                Socket handler = (Socket)ar.AsyncState;
 
+                int sent = handler.EndSend(ar);
+
+                handler.Shutdown(SocketShutdown.Both);
+                handler.Close();
+
+                Console.WriteLine("".PadLeft(4) + "Callback successfull");
+            }
+            catch(Exception e)
+            {
+
+            }
         }
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="ar"></param>
-        public static void Reclaim(IAsyncResult ar)
+        public void Reclaim(object source, ElapsedEventArgs e)
         {
-
+            
         }
     }
 }

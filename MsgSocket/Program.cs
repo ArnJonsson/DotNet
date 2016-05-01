@@ -4,9 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using System.Net;
 using Util;
 using System.Reflection;
 using System.Xml.Linq;
+using System.Timers;
+
 namespace MsgSocket
 {
 
@@ -98,7 +101,7 @@ namespace MsgSocket
         private void Print(string message = "")
         {
             Console.WriteLine("console>: " + message);
-            Console.WriteLine("gittest");
+            //Console.WriteLine("gittest");
         }
     }
 
@@ -106,7 +109,7 @@ namespace MsgSocket
     {
         static void Main(string[] args)
         {
-            bool debug = true;
+            bool debug = false;
             if(debug)
             {
                 Debug();
@@ -114,7 +117,7 @@ namespace MsgSocket
             }
 
             //
-            Controller cntrl = new Controller(new MsgSocket(null, 0));
+            Controller cntrl = new Controller(new MsgSocket(Dns.Resolve(Dns.GetHostName()).AddressList[0], 11000, 1024));
 
             // while true loop
             var input = "";
@@ -153,8 +156,18 @@ namespace MsgSocket
             tPrint("TEST : Expecting a msg with 3 data elements and some data");
             tPrint(msgTwo.AsString());
 
+            Timer timer = new Timer(1000);
+            timer.Elapsed += Timerararar;
+            timer.AutoReset = true;
+            timer.Enabled = true;
+
             // preventing app shutdown
             Console.ReadLine();
+        }
+
+        static void Timerararar(object source, ElapsedEventArgs e)
+        {
+            Console.WriteLine("Hello");
         }
 
         static void tPrint(string message = "")

@@ -172,6 +172,10 @@ namespace Util
     /// </summary>
     public class Session
     {
+        public bool terminate = false;
+
+        public bool isAuthenticated = false;
+
         public Socket workingSocket = null;
 
         public int bufferSize;
