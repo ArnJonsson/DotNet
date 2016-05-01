@@ -37,6 +37,7 @@ namespace MsgSocket
         private int bufferSize;
         public static int sessionSize;
 
+        const string serverTag = "%Server";
         const string callBackFlag = "The message was transfered successfully";
 
         /// <summary>
@@ -80,12 +81,12 @@ namespace MsgSocket
         {
             if(isRunning)
             {
-                Console.WriteLine("".PadLeft(4) + "Server is already running");
+                Print("Server is already running");
                 return;
             }
             else
             {
-                Console.WriteLine("".PadLeft(4) + "Attempting to start TcpSocketServer...");
+                Print("Attempting to start TcpSocketServer...");
                 
                 listener = new Thread(() => StartListening(address, port, bufferSize));
                 listener.IsBackground = true;
@@ -108,7 +109,7 @@ namespace MsgSocket
         {
             if(!isRunning)
             {
-                Console.WriteLine("".PadLeft(4) + "Server is not running");
+                Print("Server is not running");
             }
             else
             {
@@ -120,7 +121,7 @@ namespace MsgSocket
                 }
 
                 isRunning = false;
-                Console.WriteLine("".PadLeft(4) + "Server terminated");
+                Print("Server terminated");
             }
         }
 
@@ -143,24 +144,23 @@ namespace MsgSocket
                 // 10 for testing purposes
                 tcpListener.Listen(10);
 
+                Print(string.Format("Attempting to start listening at port {0}", port));
+
                 while(true)
                 {
                     // nonsignal state
                     eventHandler.Reset();
 
-                    Console.WriteLine("".PadLeft(4) + "MsgSocket started listening at port : " + port);
-
                     tcpListener.BeginAccept(new AsyncCallback(BeginRecieve), tcpListener);
 
                     // wait untill a message is received
-
                     eventHandler.WaitOne();
                 }
             }
             catch(Exception e)
             {
-                Console.WriteLine("".PadLeft(4) + "Failed to start MsgSocket succefully");
-                Console.WriteLine("".PadLeft(4) + e.Message);
+                Print("Failed to start MsgSocket succefully");
+                Print(e.Message);
             }
         }
         
@@ -171,7 +171,6 @@ namespace MsgSocket
         /// <param name="ar"></param>
         public static void BeginRecieve(IAsyncResult ar)
         {
-            Console.WriteLine("".PadLeft(4) + "BeginReceive");
             //set signal
             eventHandler.Set();
 
@@ -180,6 +179,9 @@ namespace MsgSocket
 
             Session session = new Session(sessionSize);
             session.workingSocket = handler;
+
+            Print((string.Format("ClientSession created with Guid {0}", session.gId.ToString())));
+
             handler.BeginReceive(session.buffer, 0, session.bufferSize, 0, new AsyncCallback(CheckReceived), session); 
         }
 
@@ -189,7 +191,6 @@ namespace MsgSocket
         /// <param name="ar"></param>
         public static void CheckReceived(IAsyncResult ar)
         {
-            Console.WriteLine("".PadLeft(4) + "Checkreceived");
 
             Session session = (Session)ar.AsyncState;
             Socket handler = session.workingSocket;
@@ -231,14 +232,11 @@ namespace MsgSocket
 
                 string datacontent = Encoding.UTF8.GetString(session.receivedData.ToArray());
 
-                Console.WriteLine(datacontent);
-
                 if(datacontent.IndexOf("</root>") > -1 || datacontent.IndexOf("root />") > -1)
                 {
-                    Console.WriteLine("DataContent recieved");
-                    Console.WriteLine(datacontent);
+                    Print((string.Format("ClientSession {0} data received, data : {1}", session.gId.ToString(), datacontent)));
 
-                    SendCallback(handler, callBackFlag);
+                    SendCallback(handler, callBackFlag, session.gId);
                 }
                 else
                 {
@@ -265,10 +263,11 @@ namespace MsgSocket
         /// z
         /// </summary>
         /// <param name="ar"></param>
-        public static void SendCallback(Socket handler, string message)
+        public static void SendCallback(Socket handler, string message, Guid id)
         {
-            Console.WriteLine("".PadLeft(4) + "SendCallback");
             byte[] response = Encoding.UTF8.GetBytes(message);
+
+            Print((string.Format("Sending transfer signal to Client {0}", id.ToString())));
 
             handler.BeginSend(response, 0, response.Length, 0, new AsyncCallback(SendCallback), handler);
         }
@@ -281,14 +280,15 @@ namespace MsgSocket
 
                 int sent = handler.EndSend(ar);
 
+                Print("Client closed");
+
                 handler.Shutdown(SocketShutdown.Both);
                 handler.Close();
-
-                Console.WriteLine("".PadLeft(4) + "Callback successfull");
+                
             }
             catch(Exception e)
             {
-
+                Print(e.Message);
             }
         }
 
@@ -300,5 +300,10 @@ namespace MsgSocket
         {
             
         }
+
+        public static void Print(string message = "")
+        {
+            Console.WriteLine(serverTag + "".PadLeft(4) + message);
+        } 
     }
 }
