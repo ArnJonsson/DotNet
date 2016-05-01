@@ -168,8 +168,15 @@ namespace Util
         /// <returns>Msg</returns>
         public static Msg FromByteArray(byte[] array)
         {
-            MemoryStream ms = new MemoryStream(array);
-            return new Msg(XDocument.Load(ms));
+            try {
+                MemoryStream ms = new MemoryStream(array);
+                return new Msg(XDocument.Load(ms));
+            }
+            catch(System.Xml.XmlException e)
+            {
+                Console.WriteLine(e.Message);
+                return null;
+            }
         }
     }
 
