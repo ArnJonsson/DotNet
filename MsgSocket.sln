@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.24720.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MsgSocket", "MsgSocket\MsgSocket.csproj", "{7063900D-3A86-4484-A36E-26028A25E2D4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Util", "Util\Util.csproj", "{6075E010-B8DF-4560-AB88-396BD894DC4F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7063900D-3A86-4484-A36E-26028A25E2D4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7063900D-3A86-4484-A36E-26028A25E2D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7063900D-3A86-4484-A36E-26028A25E2D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7063900D-3A86-4484-A36E-26028A25E2D4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6075E010-B8DF-4560-AB88-396BD894DC4F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6075E010-B8DF-4560-AB88-396BD894DC4F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6075E010-B8DF-4560-AB88-396BD894DC4F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6075E010-B8DF-4560-AB88-396BD894DC4F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
