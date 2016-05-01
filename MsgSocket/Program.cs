@@ -9,9 +9,82 @@ using Util;
 using System.Reflection;
 using System.Xml.Linq;
 using System.Timers;
+using System.IO;
+using System.Threading;
 
 namespace MsgSocket
 {
+
+    public class CompTest
+    {
+        public CompTest()
+        {
+
+        }
+
+        public void MsgTest1()
+        {
+            
+            string dir = "C:\\Users\\arnar\\AndroidStudioProjects\\Beygdu\\app\\src\\main\\res\\layout";
+
+            string[] files = Directory.GetFiles(dir);
+
+        
+            foreach(string file in files)
+            {
+                try {
+                    Msg message = new Msg(XDocument.Load(file));
+                    Console.WriteLine(message.AsString());
+                }
+                catch(Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                    Console.WriteLine(e.ToString());
+                }
+            }
+           
+        }
+
+        public void MsgTest2()
+        {
+
+          string dir = "C:\\Users\\arnar\\AndroidStudioProjects\\Beygdu\\app\\src\\main\\java\\is\\example\\aj\\beygdu\\Utils";
+
+            string[] files = Directory.GetFiles(dir);
+
+
+            foreach (string file in files)
+            {
+                try
+                {
+                    Msg message = new Msg(XDocument.Load(file));
+                    Console.WriteLine(message.AsString());
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                    Console.WriteLine(e.ToString());
+                }
+            }
+        }
+
+        public void MsgTest3()
+        {
+            byte[] randomArray = new byte[1024];
+            Random r = new Random();
+            r.NextBytes(randomArray);
+
+            try
+            {
+                Msg message = Msg.FromByteArray(randomArray);
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine(e.Message);
+                Console.WriteLine(e.ToString());
+            }
+        }
+    }
 
     /// <summary>
     /// 
@@ -109,7 +182,7 @@ namespace MsgSocket
     {
         static void Main(string[] args)
         {
-            bool debug = false;
+            bool debug = true;
             if(debug)
             {
                 Debug();
@@ -136,32 +209,12 @@ namespace MsgSocket
         {
             tPrint("Begin testing");
 
-            tPrint("Msg empty constructor");
+            CompTest test = new CompTest();
 
-            Msg msg = new Msg();
-            tPrint("TEST : Expenting a single root element");
-            tPrint(msg.AsString());
+            //test.MsgTest1(); succ
+            //test.MsgTest2(); fail, xmlException on XDocument - if the XDocument is valid current version vill not fail
+            test.MsgTest3();
 
-            msg.AddElement(new XElement("child", "some data"));
-            tPrint("TEST : Expecting a single child element in root with some data");
-            tPrint(msg.AsString());
-
-            XDocument doc = new XDocument();
-            XElement ele1 = new XElement("dataOne", "somedata1");
-            XElement ele2 = new XElement("dataTwo", "somedata2");
-            XElement ele3 = new XElement("dataThree", "somedata3");
-            doc.Add(ele1);
-            ele1.Add(ele2);
-            ele2.Add(ele3);
-
-            Msg msgTwo = new Msg(doc);
-            tPrint("TEST : Expecting a msg with 3 data elements and some data");
-            tPrint(msgTwo.AsString());
-
-            Timer timer = new Timer(1000);
-            timer.Elapsed += Timerararar;
-            timer.AutoReset = true;
-            timer.Enabled = true;
 
             // preventing app shutdown
             Console.ReadLine();
@@ -177,4 +230,6 @@ namespace MsgSocket
             Console.WriteLine(message);
         }
     }
+
+
 }
