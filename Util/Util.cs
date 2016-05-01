@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using System.IO;
+using System.Xml.Linq;
 using System.Text.RegularExpressions;
 
 namespace Util
@@ -68,45 +70,98 @@ namespace Util
     }
 
     /// <summary>
-    /// Base class for message-exchange between client and server socket
+    /// Message class - hold on to data from socket-to-socket communication
     /// </summary>
     public class Msg
     {
-        public bool isLegal { get; set; }
-        public Exception exeption { get; set; }
+        // XML document
+        public XDocument doc { get; private set; }
+        // root element
+        private XElement root;
 
+        private const string wrapper = "root";
+
+        /// <summary>
+        /// Msg(XDocument document)
+        /// Creates a new Msg xml object containing elements from document
+        /// </summary>
+        /// <param name="document">XML file to be sent to/from socket</param>
+        public Msg(XDocument document)
+        {
+            doc = new XDocument(new XDeclaration("1,0", "utf-8", "no"));
+            root = new XElement(wrapper);
+
+            XElement documentRoot = document.Root;
+
+            root.Add(documentRoot);
+
+            doc.Add(root);
+        }
+
+        /// <summary>
+        /// Msg()
+        /// Creates a new empty XML object intended for data transfer from socket to socket
+        /// </summary>
         public Msg()
         {
-            isLegal = true;
-            exeption = new Exception();
+            doc = new XDocument(new XDeclaration("1,0", "utf-8", "no"));
+            root = new XElement(wrapper);
+            doc.Add(root);
+        }
+
+        /// <summary>
+        /// AddElement(XElement element)
+        /// Adds element to the Msg root element
+        /// </summary>
+        /// <param name="element">XElement element</param>
+        /// <returns></returns>
+        public bool AddElement(XElement element)
+        {
+            try
+            {
+                root.Add(element);
+                return true;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// AsString()
+        /// </summary>
+        /// <returns>A string representation of the Msg xml document</returns>
+        public string AsString()
+        {
+            return doc.ToString();
+        }
+
+        /// <summary>
+        /// Converts the Msg to a byte array
+        /// </summary>
+        /// <returns>String representation of the Msg xml document</returns>
+        public byte[] ToByteArray()
+        {
+            MemoryStream ms = new MemoryStream();
+            doc.Save(ms);
+            // resetting the streams position - read up on functionality
+            ms.Position = 0;
+            return ms.ToArray();
+        }
+
+        /// <summary>
+        /// Converts a byte array to a Msg xml document
+        /// </summary>
+        /// <param name="array">byte[] array</param>
+        /// <returns>Msg</returns>
+        public static Msg FromByteArray(byte[] array)
+        {
+            MemoryStream ms = new MemoryStream(array);
+            return new Msg(XDocument.Load(ms));
         }
     }
 
-    public class TransferMsg : Msg
-    {
-        public List<byte> data = new List<byte>();
-
-        public static byte[] ToByteArray(TransferMsg msg)
-        {
-            if(msg.data != null)
-            {
-                return msg.data.ToArray();
-            }
-            return null;
-            
-        }
-
-        public static TransferMsg FromByteArray(byte[] array)
-        {
-            if(array != null)
-            {
-                var list = new List<byte>(array);
-                TransferMsg msg = new TransferMsg();
-                msg.data = list;
-                return msg;
-            }
-
-            return null;
-        }
-    }
+    
 }
